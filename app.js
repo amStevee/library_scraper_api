@@ -1,4 +1,3 @@
-const puppeteer = require("puppeteer");
 const $ = require("cheerio");
 const cheerio = require("cheerio");
 const axios = require("axios");
@@ -18,7 +17,7 @@ const getWebsiteLinks = async (url) => {
     for (let index = 0; index < range; index++) {
       let raw_links = $("a")[index].attribs.href;
       if (raw_links.startsWith("/")) {
-        linkList.push(url + raw_links);
+        linkList.push(Surl + raw_links);
       }
     }
     console.log(linkList);
@@ -32,11 +31,10 @@ const downloadLinks = async (linkList) => {
     for (const link of linkList) {
       const { data } = await axios.get(link);
       const $ = cheerio.load(data);
-      // let names = $("a").attr("href").endsWith(".pdf");
-      // console.log($("a")[1].attribs.href);
-      // console.log($.html(data));
-      let names = $(".menu-item > a").attr();
-      console.log(names);
+      for (let index = 0; index < $("a")[1].attribs.href.length; index++) {
+        let names = $("a")[index].attribs.href;
+        console.log(names);
+      }
       //   names = names.match(/doc\s*=\s*['"]([^'"]*)['"]/);
       // let dlink = Surl + names;
       // dlinkList.push({
@@ -46,7 +44,7 @@ const downloadLinks = async (linkList) => {
     }
     // console.log(dlinkList);
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -78,22 +76,3 @@ const downloadFiles = async (dlinkList) => {
   await downloadLinks(linkList);
   //   await downloadFiles(dlinkList);
 })();
-
-// puppeteer
-//   .launch()
-//   .then(function (browser) {
-//     return browser.newPage();
-//   })
-//   .then(function (page) {
-//     return page.goto(url).then(function () {
-//       return page.content();
-//     });
-//   })
-//   .then(function (html) {
-//     $("h2", html).each(function () {
-//       console.log($(this).text());
-//     });
-//   })
-//   .catch(function (err) {
-//     //handle error
-//   });
