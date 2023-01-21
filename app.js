@@ -20,7 +20,6 @@ const getWebsiteLinks = async (url) => {
         linkList.push(Surl + raw_links);
       }
     }
-    console.log(linkList);
   } catch (error) {
     console.error(error);
   }
@@ -31,33 +30,33 @@ const downloadLinks = async (linkList) => {
     for (const link of linkList) {
       const { data } = await axios.get(link);
       const $ = cheerio.load(data);
-      for (let index = 0; index < $("a")[1].attribs.href.length; index++) {
-        let names = $("a")[index].attribs.href;
-        console.log(names);
-      }
-      //   names = names.match(/doc\s*=\s*['"]([^'"]*)['"]/);
-      // let dlink = Surl + names;
-      // dlinkList.push({
-      //   names: names,
-      //   dlink: dlink,
-      // });
+      $("a").each(function (idx, el) {
+        if ($(el).attr("href").endsWith(".pdf")) {
+          let addr = $(el).attr("href");
+          let dlink = Surl + addr;
+          dlinkList.push({
+            names: addr,
+            dlink: dlink,
+          });
+          return;
+        }
+      });
     }
-    // console.log(dlinkList);
   } catch (error) {
     console.error(error);
   }
 };
 
 const downloadFiles = async (dlinkList) => {
-  const folderName = `/Users/Steven Anongo/Desktop/BRAND/projects/Library_web_scraper_api/PDF/`;
+  const folderName = `${Surl.split("/").pop()}/`;
   try {
     for (const link of dlinkList) {
       if (!fs.existsSync(folderName)) {
         fs.mkdirSync(folderName);
       }
-      let name = link.names + ".pdf";
+      let name = link.names;
       let url = link.dlink;
-      let file = fs.createWriteStream(`${folderName}/${name}`);
+      let file = fs.createWriteStream(`${folderName}/${name.split("/").pop()}`);
       const response = await axios({
         url,
         method: "GET",
@@ -67,12 +66,12 @@ const downloadFiles = async (dlinkList) => {
       response.data.pipe(file);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
 (async () => {
   await getWebsiteLinks(url);
   await downloadLinks(linkList);
-  //   await downloadFiles(dlinkList);
+  await downloadFiles(dlinkList);
 })();
