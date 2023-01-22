@@ -79,8 +79,6 @@ const downloadFiles = async (dlinkList) => {
           url,
           method: "GET",
           responseType: "stream",
-          // timeout: 60000, //optional
-          // httpsAgent: new https.Agent({ keepAlive: true }),
         });
         data.pipe(file);
       } catch (error) {
