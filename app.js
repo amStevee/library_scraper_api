@@ -3,6 +3,7 @@ const cheerio = require("cheerio");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+// require("./getAxios");
 
 const Surl = "https://www.health.gov.ng/";
 // const url =
@@ -27,6 +28,7 @@ const getWebsiteLinks = async (Surl) => {
         linkList.push(Surl + raw_links);
       }
     }
+    console.log("Done");
   } catch (error) {
     console.error(error);
   }
@@ -38,24 +40,24 @@ const downloadLinks = async (linkList) => {
       const { data } = await axios.get(link);
       const $ = cheerio.load(data);
       $("a").each(function (idx, el) {
-        if ($(el).attr("href").endsWith(".pdf")) {
+        if ($(el)?.attr("href")?.endsWith(".pdf")) {
           let addr = $(el).attr("href");
           let dlink = Surl + addr;
           dlinkList.push({
             names: addr,
             dlink: dlink,
           });
-          return;
         }
       });
     }
-    console.log(dlinkList);
+    console.log("Done Dl");
   } catch (error) {
     console.error("downloadLinksError: ", error);
   }
 };
 
 const downloadFiles = async (dlinkList) => {
+  console.log("starting");
   const folderName = `./PDF/${Surl.split("/").pop()}`;
   const folderNameF = `/PDF/${Surl.split("/").pop()}`;
   try {
@@ -65,6 +67,7 @@ const downloadFiles = async (dlinkList) => {
     dlinkList.forEach(async (link) => {
       let name = link.names;
       let url = link.dlink;
+
       let file = fs
         .createWriteStream(`${folderName}/${name.split("/").pop()}`)
         .on("error", (err) => {
@@ -81,41 +84,13 @@ const downloadFiles = async (dlinkList) => {
         });
         data.pipe(file);
       } catch (error) {
-        console.error("My-axiosError", error);
+        console.error(error);
       }
     });
   } catch (error) {
     console.error("downloadFilesError: ", error);
   }
 };
-
-// const downloadFiles = async (dlinkList) => {
-//   const folderName = `/PDF/${Surl.split("/").pop()}`;
-//   try {
-//     for (const link of dlinkList) {
-//       // if (!fs.existsSync(path.join(__dirname, folderName))) {
-//       // }
-//       fs.mkdirSync(path.join(__dirname, folderName));
-//       let name = link.names;
-//       let url = link.dlink;
-//       let file = fs
-//         .createWriteStream(`${folderName}/${name.split("/").pop()}`)
-//         .on("error", (err) => {
-//           console.error("createWriteStreamError: ", err);
-//         });
-//       console.log(link);
-//       const response = await axios({
-//         url,
-//         method: "GET",
-//         responseType: "stream",
-//       });
-
-//       response.data.pipe(file);
-//     }
-//   } catch (error) {
-//     console.error("downloadFilesError: ", error);
-//   }
-// };
 
 (async () => {
   await getWebsiteLinks(Surl);
