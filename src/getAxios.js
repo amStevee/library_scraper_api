@@ -1,8 +1,8 @@
 const axios = require("axios");
-const https =  require("https");
+const https = require("https");
 
 module.exports = function () {
-  const domain = "https://www.health.gov.ng/";
+  const domain = "https://www.ndic.gov.ng/publications";
   let instance;
 
   if (!instance) {

@@ -4,7 +4,7 @@
   "description": "web srcaper",
   "main": "app.js",
   "scripts": {
-    "start": "npm start",
+    "start": "node ./src/app.js",
     "test": "npm test"
   },
   "author": "Steven .A. Anongo",

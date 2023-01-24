@@ -6,7 +6,7 @@ const cheerio = require("cheerio");
 const axiosInstance = require("./getAxios");
 
 const axios = axiosInstance();
-const Surl = "https://www.health.gov.ng";
+const Surl = "https://www.ndic.gov.ng/publications";
 
 // linkList sample:  "https://www.health.gov.ng/index.php?option=com_content&view=article&id=143&Itemid=512";
 
@@ -30,9 +30,7 @@ const getWebsiteLinks = async (Surl) => {
 
     for (let index = 0; index < ranges.length; index++) {
       let raw_links = $("a")[index].attribs.href;
-      if (raw_links.startsWith("/")) {
-        linkList.push(Surl + raw_links);
-      }
+      linkList.push(raw_links);
     }
 
     if (linkList.length > 0) {
@@ -62,24 +60,14 @@ const downloadLinks = async (linkList) => {
     console.log("Crawling links to find pdf links. this may take  a while...");
 
     for (const link of linkList) {
-      const response = await axios.get(link);
-
-      // Skip where there's delayed server response
-      if (response.code === "ECONNRESET") continue;
-
-      const $ = cheerio.load(response.data);
-
-      $("a").each(function (idx, el) {
-        if ($(el)?.attr("href")?.endsWith(".pdf")) {
-          let addr = $(el).attr("href");
-          let dlink = Surl + addr;
-
-          dlinkList.push({
-            pathName: addr,
-            url: dlink,
-          });
-        }
-      });
+      if (link) {
+        let addr = link.split("/").pop();
+        let dlink = link;
+        dlinkList.push({
+          pathName: addr,
+          url: dlink,
+        });
+      }
     }
 
     console.log(dlinkList);
@@ -90,22 +78,7 @@ const downloadLinks = async (linkList) => {
       );
     }
   } catch (error) {
-    if (connectionFailCount === 0) {
-
-      connectionFailCount += 1;
-
-      console.log(`Connection error. \n
-      Reconnecting to server: ${connectionFailCount} count`);
-      downloadLinks(linkList);
-    }
-    
-    if (connectionFailCount === 3) {
-      console.error(`Can not connect to server. Try again later.`);
-
-      return
-    }
-
-    // console.error("downloadLinksError: ", error);
+    console.error(error);
   }
 };
 
@@ -165,5 +138,4 @@ const downloadFiles = async (dlinkList) => {
   await getWebsiteLinks(Surl);
   await downloadLinks(linkList);
   await downloadFiles(dlinkList);
-  
 })();
