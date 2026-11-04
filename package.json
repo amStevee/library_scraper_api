@@ -1,19 +1,33 @@
 {
-  "name": "library_web_scraper_api",
+  "name": "library_scraper_api",
   "version": "1.0.0",
-  "description": "web srcaper",
-  "main": "app.js",
+  "description": "Library web scraper",
+  "main": "index.js",
   "scripts": {
     "start": "node ./src/app.js",
-    "test": "npm test"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Steven .A. Anongo",
+  "keywords": [
+    "node.js",
+    "cheerio",
+    "web scraper"
+  ],
+  "author": "Steven Anongo",
   "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.14.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.14.0",
+  "type": "module",
   "dependencies": {
-    "axios": "^1.2.3",
-    "cheerio": "^1.0.0-rc.12",
-    "puppeteer": "^19.5.2",
-    "request": "^2.88.2",
-    "request-promise": "^4.2.6"
+    "axios": "^1.20.0",
+    "cheerio": "^1.2.0",
+    "puppeteer": "^25.14.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   }
 }

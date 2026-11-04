@@ -1,18 +1,32 @@
-const fs = require("fs");
-const path = require("path");
-const https = require("https");
-const $ = require("cheerio");
-const cheerio = require("cheerio");
-const axiosInstance = require("./getAxios");
+import fs from "fs";
+import path from "path";
+import https from "https";
+import $ from "cheerio";
+import cheerio from "cheerio";
+import axiosInstance from "./v2/infrastructure/api/getAxios";
+import { checkFileExist, isValidUrl } from "./utils";
+import puppeteer from "puppeteer";
 
 const axios = axiosInstance();
 const Surl = "https://www.ndic.gov.ng/publications";
 
 // linkList sample:  "https://www.health.gov.ng/index.php?option=com_content&view=article&id=143&Itemid=512";
 
-let = connectionFailCount = 0;
+let connectionFailCount = 0;
 let linkList = [];
 let dlinkList = [];
+
+async function loginUser(user) {
+  const browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
+
+  await page.setViewport({ width: 1280, height: 800 });
+  await page.setUserAgent({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  });
+}
+
 
 const getWebsiteLinks = async (Surl) => {
   try {
@@ -36,7 +50,7 @@ const getWebsiteLinks = async (Surl) => {
     if (linkList.length > 0) {
       console.log(`Finished crawling links: Found ${linkList.length} links`);
       console.log(
-        "--------------------------------------------------------\n\n"
+        "--------------------------------------------------------\n\n",
       );
     }
 
@@ -70,11 +84,10 @@ const downloadLinks = async (linkList) => {
       }
     }
 
-    console.log(dlinkList);
     if (dlinkList.length > 0) {
       console.log(`Crawling Finish: Found ${dlinkList.length} pdf links`);
       console.log(
-        "--------------------------------------------------------\n\n"
+        "--------------------------------------------------------\n\n",
       );
     }
   } catch (error) {
@@ -87,24 +100,34 @@ const downloadFiles = async (dlinkList) => {
 
   const appRoot = path.dirname(path.resolve(__dirname));
 
-  // Had to change and restructure code due to error
   const folderName = `PDF/${Surl.split("/").pop()}`;
   const subFolderName = Surl.split("/").pop();
 
   try {
-    if (!fs.existsSync(path.join(appRoot, folderName))) {
+    const isFolderExist = await checkFileExist(path.join(appRoot, folderName));
+    if (isFolderExist) {
       fs.mkdirSync(path.join(appRoot, "PDF"));
       fs.mkdirSync(path.join(`${appRoot}/PDF`, subFolderName));
     }
 
-    dlinkList.forEach(async (link) => {
+    for (const link of dlinkList) {
+      if (!link.pathName) continue;
       let name = link.pathName;
-      let url = link.url;
+      if (!isValidUrl(link.url)) continue;
+      let url = new URL(link.url);
+
+      if (
+        !url ||
+        typeof url !== "string" ||
+        !url.pathname.toLowerCase().endsWith(".pdf")
+      ) {
+        continue;
+      }
 
       let file = fs
         .createWriteStream(
           `${appRoot}/${folderName}/${name.split("/").pop()}`,
-          "utf-8"
+          "utf-8",
         )
         .on("error", (err) => {
           console.error("createWriteStreamError: ", err);
@@ -126,7 +149,7 @@ const downloadFiles = async (dlinkList) => {
       } catch (error) {
         console.error(error);
       }
-    });
+    }
 
     return;
   } catch (error) {
