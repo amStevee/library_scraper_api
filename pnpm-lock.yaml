@@ -172,15 +172,16 @@ importers:
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
-      puppeteer:
-        specifier: ^25.14.0
-        version: 25.14.0
       puppeteer-extra:
         specifier: ^3.3.6
         version: 3.3.6(puppeteer-core@25.14.0)(puppeteer@25.14.0)
       puppeteer-extra-plugin-stealth:
         specifier: ^2.11.2
         version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@25.14.0)(puppeteer@25.14.0))
+    devDependencies:
+      puppeteer:
+        specifier: ^25.14.0
+        version: 25.14.0
 
 packages:
 

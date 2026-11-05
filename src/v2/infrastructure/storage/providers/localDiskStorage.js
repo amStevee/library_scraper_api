@@ -8,12 +8,14 @@ class FsProvider {
     this.appRoot = path.join(os.homedir(), "Desktop");
   }
   async createFolder(folderName) {
-    console.log('creating folder...')
+    console.log("creating folder...");
     const folderPath = path.join(this.appRoot, folderName);
     try {
       await fs.promises.mkdir(folderPath, { recursive: true });
-      console.log(`${folderPath.split(pathSeperator).pop()} directory successfuly created`)
-      return folderPath
+      console.log(
+        `${folderPath.split(pathSeperator).pop()} directory successfuly created`,
+      );
+      return folderPath;
     } catch (error) {
       if (error.code === "EACCES") {
         console.error(`Permission denied to create diretory: ${folderPath}`);
@@ -23,15 +25,19 @@ class FsProvider {
         );
       } else {
         console.error("Faild to create folder: ", error.message);
+        throw error;
       }
-      console.error(error); // TODO: handle failure
     }
   }
 
   // `${appRoot}/${folderName}/${name.split("/").pop()}`
 
   async createWriteFileStream(filePath, encoding) {
-    return fs.createWriteStream(filePath, encoding)
+    return fs.createWriteStream(filePath, encoding);
+  }
+
+  getAppRoot() {
+    return this.appRoot;
   }
 }
 

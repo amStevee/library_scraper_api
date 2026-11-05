@@ -11,12 +11,8 @@ class ApiService {
     }
   }
 
-  async getStream(link) {
-    try {
-      return await this.provider.getStream(link);
-    } catch (error) {
-      console.error(error);
-    }
+  async getStream(url, headers) {
+    return await this.provider.getStream(url, headers);
   }
 }
 

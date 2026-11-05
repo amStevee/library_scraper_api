@@ -13,36 +13,14 @@ class Api {
     });
   }
 
-  async fetchHtml(url) {
-    console.log("Fetching HTML...");
-    try {
-      return await this.axios.get(url);
-    } catch (error) {
-      if (this.connectionFailCount === 0) {
-        this.connectionFailCount += 1;
-
-        this.fetchHtml(url);
-
-        console.log(`Connection error. \n Reconnecting to server....`);
-      } else if (this.connectionFailCount === 5) {
-        console.error(`Can not connect to server. Try again later.`);
-      }
-    }
-  }
-
-  async getStream(url) {
-    try {
-      console.log("Downloading file...");
-      return (
-        await axios({
-          url,
-          method: "GET",
-          responseType: "stream",
-        })
-      ).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getStream(url, headers) {
+    console.log("Downloading file...");
+    return (
+      await axios.get(url, {
+        responseType: "stream",
+        headers,
+      })
+    ).data;
   }
 }
 
