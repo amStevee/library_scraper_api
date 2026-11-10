@@ -24,4 +24,21 @@ function normalizeHostname(hostame) {
   }
 }
 
-export { checkFileExist, isValidUrl, normalizeHostname };
+function normalizeHostnameToFileName(fileUrl) {
+  const fileUrlObject = new URL(fileUrl);
+  const fileName = path
+    .basename(decodeURIComponent(fileUrlObject.pathname))
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+    .replace(/[. ]+$/, "");
+
+  if (!fileName) throw new Error(`Cannot determine filename for ${fileUrl}`);
+
+  return fileName;
+}
+
+export {
+  checkFileExist,
+  isValidUrl,
+  normalizeHostname,
+  normalizeHostnameToFileName,
+};

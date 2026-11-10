@@ -9,6 +9,7 @@ async function scrapUrl(url) {
   let page;
   try {
     const webUrl = new URL(url);
+    // Generate folder name and path
     const folderName = normalizeHostname(webUrl.hostname);
     const folderPath = await storageService.createFolder(folderName);
 
@@ -29,6 +30,7 @@ async function scrapUrl(url) {
 
     for (const link of pdfLinks) {
       let fileUrl;
+      // Normalize URL
       if (!isValidUrl(link)) {
         if (!isValidUrl(`${webUrl.origin}${link}`)) continue;
         fileUrl = new URL(`${webUrl.origin}${link}`);
@@ -39,7 +41,7 @@ async function scrapUrl(url) {
       try {
         const data = await browserService.downloadFile(
           fileUrl.href,
-          page,
+          browserInstance.headers,
           folderPath,
         );
 

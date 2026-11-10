@@ -5,6 +5,7 @@ import puppeteer from "puppeteer-extra";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import { storageService } from "../../storage/storageProvider.js";
 import { apiService } from "../../api/apiProvider.js";
+import { normalizeHostnameToFileName } from "../../../lib/utils.js";
 
 puppeteer.use(stealthPlugin());
 
@@ -34,7 +35,18 @@ export class PuppeteerProvider {
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36",
       });
 
-      return { page };
+      const cookies = await page.browserContext().cookies(fileUrl);
+      const headers = {
+        "User-Agent": await page.evaluate(() => navigator.userAgent),
+        Referer: page.url(),
+      };
+      if (cookies.length) {
+        headers.Cookie = cookies
+          .map(({ name, value }) => `${name}=${value}`)
+          .join("; ");
+      }
+
+      return { page, headers };
     } catch (error) {
       console.error(error);
       return null;
@@ -72,28 +84,13 @@ export class PuppeteerProvider {
     }
   }
 
-  async downloadFile(fileUrl, page, downloadPath) {
-    if (!page) throw new Error("Cannot download file: page is not initialized");
+  async downloadFile(fileUrl, headers, downloadPath) {
+    if (!headers)
+      throw new Error("Cannot download file: missing required headers");
     if (!downloadPath)
       throw new Error("Cannot download file: download path is missing");
 
-    const fileUrlObject = new URL(fileUrl);
-    const fileName = path
-      .basename(decodeURIComponent(fileUrlObject.pathname))
-      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
-      .replace(/[. ]+$/, "");
-    if (!fileName) throw new Error(`Cannot determine filename for ${fileUrl}`);
-
-    const cookies = await page.browserContext().cookies(fileUrl);
-    const headers = {
-      "User-Agent": await page.evaluate(() => navigator.userAgent),
-      Referer: page.url(),
-    };
-    if (cookies.length) {
-      headers.Cookie = cookies
-        .map(({ name, value }) => `${name}=${value}`)
-        .join("; ");
-    }
+    const fileName = normalizeHostnameToFileName(fileUrl);
 
     let response;
     try {
