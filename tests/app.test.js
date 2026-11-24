@@ -54,6 +54,14 @@ describe("Express app", () => {
     );
   });
 
+  test("serves the matching SVG favicon", async () => {
+    const response = await fetch(`${baseUrl}/favicon.svg`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toMatch(/image\/svg\+xml/);
+    expect(await response.text()).toContain('fill="#17231e"');
+  });
+
   test("returns a healthy status from /health", async () => {
     const response = await fetch(`${baseUrl}/health`);
 
