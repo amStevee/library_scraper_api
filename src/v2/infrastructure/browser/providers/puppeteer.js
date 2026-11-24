@@ -8,6 +8,7 @@ import { apiService } from "../../api/apiProvider.js";
 import { outboundAccessService } from "../../network/outboundAccessProvider.js";
 import { normalizeFileName } from "../../../lib/utils.js";
 
+
 puppeteer.use(stealthPlugin());
 
 export class PuppeteerProvider {
@@ -42,7 +43,18 @@ export class PuppeteerProvider {
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36",
       });
 
-      return { page };
+      const cookies = await page.browserContext().cookies(fileUrl);
+      const headers = {
+        "User-Agent": await page.evaluate(() => navigator.userAgent),
+        Referer: page.url(),
+      };
+      if (cookies.length) {
+        headers.Cookie = cookies
+          .map(({ name, value }) => `${name}=${value}`)
+          .join("; ");
+      }
+
+      return { page, headers };
     } catch (error) {
       if (browser) {
         try {
@@ -135,6 +147,7 @@ export class PuppeteerProvider {
         .map(({ name, value }) => `${name}=${value}`)
         .join("; ");
     }
+
 
     let response;
     try {

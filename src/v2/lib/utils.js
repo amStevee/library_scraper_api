@@ -32,9 +32,11 @@ function normalizeFileName(fileUrl) {
     .basename(decodeURIComponent(fileUrlObject.pathname))
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
     .replace(/[. ]+$/, "");
+
   if (!fileName) throw new Error(`Cannot determine filename for ${fileUrl}`);
 
   return fileName;
 }
 
 export { checkFileExist, isValidUrl, normalizeHostname, normalizeFileName };
+
