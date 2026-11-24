@@ -14,6 +14,14 @@ class StorageService {
   async createWriteFileStream(filePath, encoding) {
     return this.provider.createWriteFileStream(filePath, encoding);
   }
+
+  async createTemporaryFolder(prefix) {
+    return this.provider.createTemporaryFolder(prefix);
+  }
+
+  async removeTemporaryFolder(folderPath) {
+    return this.provider.removeTemporaryFolder(folderPath);
+  }
 }
 
 export function createStorageService(provider) {

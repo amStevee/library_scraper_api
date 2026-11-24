@@ -11,8 +11,13 @@ export class BrowserService {
     return await this.provider.fetchHtml(url);
   }
 
-  async downloadFile(fileUrl, page, downloadPath) {
-    return await this.provider.downloadFile(fileUrl, page, downloadPath);
+  async downloadFile(fileUrl, page, downloadPath, isDriveFile = false) {
+    return await this.provider.downloadFile(
+      fileUrl,
+      page,
+      downloadPath,
+      isDriveFile,
+    );
   }
 }
 

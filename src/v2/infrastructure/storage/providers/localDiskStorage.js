@@ -36,6 +36,14 @@ class FsProvider {
     return fs.createWriteStream(filePath, encoding);
   }
 
+  async createTemporaryFolder(prefix) {
+    return fs.promises.mkdtemp(path.join(os.tmpdir(), prefix));
+  }
+
+  async removeTemporaryFolder(folderPath) {
+    await fs.promises.rm(folderPath, { recursive: true, force: true });
+  }
+
   getAppRoot() {
     return this.appRoot;
   }

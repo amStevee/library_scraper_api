@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Collect linked PDFs, DOCX files, and public Google Drive files from a library or resource page. libXp gathers them into one ZIP download."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#f5f2e9" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="libXp | Library Resource Harvester" />
+    <meta
+      property="og:description"
+      content="Collect linked PDFs, DOCX files, and public Google Drive files from a library or resource page, then download them as one ZIP."
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="libXp | Library Resource Harvester" />
+    <meta
+      name="twitter:description"
+      content="Collect linked PDFs, DOCX files, and public Google Drive files from a library or resource page, then download them as one ZIP."
+    />
+    <title>libXp | Library Resource Harvester</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "libXp Library Resource Harvester",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "description": "libXp (Library experience) collects linked PDF and DOCX files and publicly downloadable Google Drive files from a library or resource page, then delivers them as one ZIP download."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How long does a harvest take?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends on how many files the page links to, their sizes, and how quickly the source site responds. libXp shows an elapsed timer while it works; there is no fixed completion time."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to keep this page open?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Keep this tab open until libXp starts the ZIP download. The current service does not provide background job tracking."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where are the collected files saved?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "libXp packages the collected files into one ZIP archive and sends it to your browser. Your browser saves it to its configured downloads location or asks where you want to save it."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can libXp collect private or sign-in-required files?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. libXp does not sign in to websites or Google Drive. A file that requires authentication or a Google Drive confirmation step cannot be collected."
+            }
+          }
+        ]
+      }
+    </script>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="libXp, Library experience home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M5.5 7.5c4.2-.8 7.7.1 10.5 2.4v16c-2.8-2.3-6.3-3.1-10.5-2.4v-16Z" />
+            <path d="M26.5 7.5c-4.2-.8-7.7.1-10.5 2.4v16c2.8-2.3 6.3-3.1 10.5-2.4v-16Z" />
+            <path d="M9 12c2 .1 3.6.6 5 1.5M9 16c2 .1 3.6.6 5 1.5M23 12c-2 .1-3.6.6-5 1.5M23 16c-2 .1-3.6.6-5 1.5" />
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">libXp</span>
+          <span class="brand-tagline">Library experience</span>
+        </span>
+      </a>
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="#how-it-works">How it works</a>
+        <a href="#what-it-collects">What it collects</a>
+        <a href="#faq">FAQs</a>
+      </nav>
+      <span class="availability"><span></span> Public links only</span>
+    </header>
+
+    <main>
+      <p class="hero-kicker">LIBRARY RESOURCE HARVESTER</p>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <h1 id="hero-title">Library resources, gathered in <em>one ZIP.</em></h1>
+          <p class="hero-description">
+            Paste a public library or resource-page URL. libXp gathers linked
+            PDFs, DOCX files, and public Drive files into one ZIP.
+          </p>
+
+          <form class="harvest-form" id="harvest-form">
+            <label for="page-url">Public library or resource page URL</label>
+            <div class="input-row">
+              <span class="input-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="M8.2 11.8a3.1 3.1 0 0 0 4.4 0l2.2-2.2a3.1 3.1 0 0 0-4.4-4.4L9.1 6.5" />
+                  <path d="M11.8 8.2a3.1 3.1 0 0 0-4.4 0L5.2 10.4a3.1 3.1 0 0 0 4.4 4.4l1.3-1.3" />
+                </svg>
+              </span>
+              <input
+                id="page-url"
+                name="url"
+                type="url"
+                inputmode="url"
+                placeholder="https://library.example.edu/resources"
+                autocomplete="url"
+                required
+              />
+              <button class="submit-button" type="submit">
+                <span>Harvest resources</span>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path d="M4 10h11M10 5l5 5-5 5" />
+                </svg>
+              </button>
+            </div>
+            <div class="harvest-progress" id="harvest-progress" hidden>
+              <div class="progress-heading">
+                <span class="progress-spinner" aria-hidden="true"></span>
+                <strong id="progress-title">Collecting resources</strong>
+                <time id="elapsed-time" aria-label="Time elapsed">0:00</time>
+              </div>
+              <div
+                class="progress-track"
+                role="progressbar"
+                aria-label="Harvest progress"
+                aria-valuetext="In progress. Exact progress is not available."
+              >
+                <span></span>
+              </div>
+            </div>
+            <p class="status-message" id="harvest-status" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="patience-note" id="patience-note" hidden>
+            <span class="patience-icon" aria-hidden="true">⌛</span>
+            <p class="patience-message" id="patience-message"></p>
+          </div>
+        </div>
+
+        <div class="hero-art" role="img" aria-label="An illustration of collected library resources">
+          <div class="orbit orbit-one"></div>
+          <div class="art-label"><span></span> FROM PAGE TO COLLECTION</div>
+          <div class="book-stack">
+            <div class="book book-back">
+              <span class="book-spine"></span>
+              <span class="book-line"></span>
+              <span class="book-line short"></span>
+              <span class="book-mark">02</span>
+            </div>
+            <div class="book book-middle">
+              <span class="book-spine"></span>
+              <span class="book-line"></span>
+              <span class="book-line short"></span>
+              <span class="book-mark">01</span>
+            </div>
+            <div class="book book-front">
+              <span class="book-spine"></span>
+              <span class="book-kicker">FIELD NOTES</span>
+              <span class="book-title">A world<br />of knowledge</span>
+              <span class="book-sun"></span>
+              <span class="book-author">LIBXP COLLECTION</span>
+            </div>
+            <span class="spark spark-one">✳</span>
+          </div>
+          <div class="floating-note">
+            <span class="note-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none">
+                <path d="M5 2.8h6l4 4v10.4H5V2.8Z" />
+                <path d="M11 2.8v4h4M7.5 11h5M7.5 14h5" />
+              </svg>
+            </span>
+            <span><strong>Useful links, gathered</strong><small>PDF · DOCX · public Drive</small></span>
+            <span class="note-check" aria-hidden="true">✓</span>
+          </div>
+          <p class="art-caption">One page in. One tidy collection out.</p>
+        </div>
+      </section>
+
+      <section class="how-it-works" id="how-it-works" aria-labelledby="how-title">
+        <div class="section-intro">
+          <span class="section-index">01 — 03</span>
+          <h2 id="how-title">From resource page<br /><strong>to one ZIP.</strong></h2>
+        </div>
+        <article class="step">
+          <span class="step-number">01</span>
+          <div>
+            <h3>Find a public page</h3>
+            <p>Start with a library page or resource list that links to files.</p>
+          </div>
+        </article>
+        <article class="step">
+          <span class="step-number">02</span>
+          <div>
+            <h3>Paste its URL</h3>
+            <p>libXp checks that page for supported files and public Drive links.</p>
+          </div>
+        </article>
+        <article class="step">
+          <span class="step-number">03</span>
+          <div>
+            <h3>Wait for the result</h3>
+            <p>Keep this page open; your browser downloads one ZIP when it is ready.</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="details-section" id="what-it-collects" aria-labelledby="details-title">
+        <div class="details-heading">
+          <p class="section-index">CLEAR EXPECTATIONS</p>
+          <h2 id="details-title">What libXp collects</h2>
+          <p>
+            libXp follows file links on the page you submit—not the whole site.
+            It does not sign in to private accounts.
+          </p>
+        </div>
+        <div class="detail-grid">
+          <article class="detail-card">
+            <span class="detail-number">01</span>
+            <h3>PDF and DOCX documents</h3>
+            <p>Linked files in these formats are collected from the submitted page.</p>
+          </article>
+          <article class="detail-card">
+            <span class="detail-number">02</span>
+            <h3>Public Google Drive files</h3>
+            <p>Publicly downloadable Drive files are supported; sign-in or confirmation pages are not.</p>
+          </article>
+          <article class="detail-card">
+            <span class="detail-number">03</span>
+            <h3>Downloaded to your device</h3>
+            <p>libXp packages collected files into one ZIP archive for your browser to save.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="faq-section" id="faq" aria-labelledby="faq-title">
+        <div class="faq-heading">
+          <p class="section-index">GOOD TO KNOW</p>
+          <h2 id="faq-title">Frequently asked questions</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>How long does a harvest take?</summary>
+            <p>
+              It depends on how many files the page links to, their sizes, and
+              how quickly the source site responds. libXp shows an elapsed timer
+              while it works; there is no fixed completion time.
+            </p>
+          </details>
+          <details>
+            <summary>Do I need to keep this page open?</summary>
+            <p>
+              Yes. Keep this tab open until libXp starts the ZIP download.
+              The current service does not provide background job tracking.
+            </p>
+          </details>
+          <details>
+            <summary>Where are the collected files saved?</summary>
+            <p>
+              libXp packages the collected files into one ZIP archive and sends
+              it to your browser. Your browser saves it to its configured
+              downloads location or asks where you want to save it.
+            </p>
+          </details>
+          <details>
+            <summary>Can libXp collect private or sign-in-required files?</summary>
+            <p>
+              No. libXp does not sign in to websites or Google Drive. A file
+              that requires authentication or a Google Drive confirmation step
+              cannot be collected.
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="footer-brand" href="#" aria-label="libXp home">libXp</a>
+      <p>Library experience, made easier.</p>
+      <span class="footer-stamp">OPEN A NEW CHAPTER <span>↗</span></span>
+    </footer>
+  </body>
+</html>

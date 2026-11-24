@@ -1,9 +1,11 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import puppeteer from "puppeteer-extra";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import { storageService } from "../../storage/storageProvider.js";
 import { apiService } from "../../api/apiProvider.js";
+import { outboundAccessService } from "../../network/outboundAccessProvider.js";
 import { normalizeFileName } from "../../../lib/utils.js";
 
 puppeteer.use(stealthPlugin());
@@ -13,9 +15,11 @@ export class PuppeteerProvider {
   maxRetries = 5;
 
   async lunchBrowserPage() {
+    let browser;
     try {
       console.log(`launching browser....`);
-      const browser = await puppeteer.launch({
+      const proxyUrl = await outboundAccessService.getProxyUrl();
+      browser = await puppeteer.launch({
         headless: true,
         // executablePath: `C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe`,
         args: [
@@ -23,6 +27,10 @@ export class PuppeteerProvider {
           "--disable-gpu",
           "--enable-webgl",
           "--unhandle-rejections=strict",
+          `--proxy-server=${proxyUrl}`,
+          "--proxy-bypass-list=<-loopback>",
+          "--disable-quic",
+          "--force-webrtc-ip-handling-policy=disable_non_proxied_udp",
         ],
         defaultViewport: null,
       });
@@ -36,40 +44,69 @@ export class PuppeteerProvider {
 
       return { page };
     } catch (error) {
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (closeError) {
+          console.error("Failed to close browser after launch error:", closeError);
+        }
+      }
       console.error(error);
       return null;
     }
   }
 
   async fetchHtml(url) {
+    let page;
     try {
       const browserInstance = await this.lunchBrowserPage();
-      if (!browserInstance.page) {
-        console.log("page not initialized undefined");
-        return {
-          htmlContent: "",
-          page: undefined,
-          client: browserInstance.client,
-        };
+      if (!browserInstance?.page) {
+        throw new Error("Unable to initialize the browser page.");
       }
 
-      await browserInstance.page.goto(url, {
+      page = browserInstance.page;
+      await page.setRequestInterception(true);
+      page.on("request", (request) => {
+        let protocol;
+        try {
+          protocol = new URL(request.url()).protocol;
+        } catch {
+          protocol = "";
+        }
+
+        const action = ["http:", "https:"].includes(protocol)
+          ? request.continue()
+          : request.abort("blockedbyclient");
+        void action.catch((error) => {
+          if (!page.isClosed()) {
+            console.error("Failed to enforce browser request policy:", error);
+          }
+        });
+      });
+      await page.goto(url, {
         waitUntil: "networkidle0",
         timeout: 30000,
       });
 
-      await browserInstance.page.waitForSelector('a[href^="/storage/');
-
       const hrefs = [
         ...new Set(
-          await browserInstance.page.$$eval("a", (anchors) =>
+          await page.$$eval("a[href]", (anchors) =>
             anchors.map((a) => a.href),
           ),
         ),
       ];
 
+      this.connectionFailCount = 0;
       return { hrefs, ...browserInstance };
     } catch (error) {
+      if (page) {
+        try {
+          await page.browser().close();
+        } catch (closeError) {
+          console.error("Failed to close browser after crawl error:", closeError);
+        }
+      }
+
       this.connectionFailCount += 1;
 
       if (this.connectionFailCount < this.maxRetries) {
@@ -77,18 +114,16 @@ export class PuppeteerProvider {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         return this.fetchHtml(url);
       } else {
-        console.error(`Error Crawling page:`, error);
-        throw new Error(`Faild to crawl page after reaching the retry limit.`);
+        console.error("Error crawling page:", error);
+        throw error;
       }
     }
   }
 
-  async downloadFile(fileUrl, page, downloadPath) {
+  async downloadFile(fileUrl, page, downloadPath, isDriveFile = false) {
     if (!page) throw new Error("Cannot download file: page is not initialized");
     if (!downloadPath)
       throw new Error("Cannot download file: download path is missing");
-
-    const fileName = normalizeFileName(fileUrl);
 
     const cookies = await page.browserContext().cookies(fileUrl);
     const headers = {
@@ -112,10 +147,35 @@ export class PuppeteerProvider {
       throw error;
     }
 
+    const contentType = response.headers["content-type"] || "";
+    if (/^text\/html\b/i.test(contentType)) {
+      response.data.destroy();
+      throw new Error(
+        isDriveFile
+          ? "Google Drive returned a web page; the file may require sign-in or confirmation."
+          : "The resource returned a web page instead of a downloadable file.",
+      );
+    }
+
+    const fileName = getResponseFileName(
+      response.headers["content-disposition"],
+      fileUrl,
+      isDriveFile,
+    );
     const filePath = path.join(downloadPath, fileName);
     const writeStream = await storageService.createWriteFileStream(filePath);
 
-    await pipeline(response, writeStream);
+    try {
+      await pipeline(response.data, writeStream);
+    } catch (error) {
+      try {
+        await fs.rm(filePath, { force: true });
+      } catch (cleanupError) {
+        console.error(`Failed to remove partial download ${filePath}:`, cleanupError);
+      }
+      throw error;
+    }
+
     return filePath;
   }
 
@@ -124,4 +184,40 @@ export class PuppeteerProvider {
 
 export function createPuppeteerProvider() {
   return new PuppeteerProvider();
+}
+
+function getResponseFileName(contentDisposition, fileUrl, isDriveFile) {
+  const extendedName = contentDisposition?.match(
+    /filename\*\s*=\s*UTF-8''([^;]+)/i,
+  )?.[1];
+  const ordinaryName = contentDisposition?.match(
+    /filename\s*=\s*(?:"([^"]+)"|([^;]+))/i,
+  );
+
+  let fileName;
+  if (extendedName) {
+    try {
+      fileName = decodeURIComponent(extendedName.trim());
+    } catch (error) {
+      console.warn("Ignoring malformed extended filename:", error);
+      fileName = undefined;
+    }
+  }
+  fileName ||= ordinaryName?.[1] || ordinaryName?.[2]?.trim();
+
+  if (fileName) {
+    fileName = path
+      .basename(fileName.replace(/\\/g, "/"))
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+      .replace(/[. ]+$/, "");
+  }
+
+  if (fileName) return fileName;
+
+  if (isDriveFile) {
+    const fileId = new URL(fileUrl).searchParams.get("id");
+    return `drive-file-${fileId || "download"}`;
+  }
+
+  return normalizeFileName(fileUrl);
 }
