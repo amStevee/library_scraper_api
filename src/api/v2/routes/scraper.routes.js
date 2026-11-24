@@ -1,5 +1,5 @@
 import express from "express";
-import scraperController from "../controllers/scraper.controller.js";
+import scraperController from "../../../controllers/scraper.controller.js";
 
 const router = express.Router();
 

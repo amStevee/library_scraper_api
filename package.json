@@ -4,7 +4,7 @@
   "description": "Library web scraper",
   "main": "index.js",
   "scripts": {
-    "start": "node ./src/v2/index.js",
+    "start": "node ./src/index.js",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand"
   },
   "jest": {

@@ -1,5 +1,5 @@
 import express from "express";
-import scraperRoutes from "./routes/scraper.routes.js";
+import scraperRoutes from "./api/v2/routes/scraper.routes.js";
 
 const router = express.Router();
 
