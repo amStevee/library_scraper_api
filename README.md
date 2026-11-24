@@ -273,8 +273,9 @@ Jest runs in-band with Node's VM module support for the project's native ES
 modules. `tests/app.test.js` starts the Express app on an ephemeral loopback
 port and tests the landing page, health endpoint, harvest input validation,
 ZIP response headers/body, no-file response, blocked-destination mapping, and
-generic failure handling. The scraping service is mocked, so these tests do
-not launch Chromium or make requests to external websites.
+generic failure handling. `tests/puppeteer-provider.test.js` checks browser
+page initialization using mocked browser dependencies. These tests do not
+launch Chromium or make requests to external websites.
 
 For a change:
 
