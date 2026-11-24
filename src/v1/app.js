@@ -1,40 +1,29 @@
 import fs from "fs";
 import path from "path";
-import https from "https";
-import $ from "cheerio";
 import cheerio from "cheerio";
-import axiosInstance from "./v2/infrasturcture/getAxios";
-import { checkFileExist, isValidUrl } from "./utils";
-import puppeteer from "puppeteer";
+import axios from "./axiosinstance.js";
 
-
-const axios = axiosInstance();
-const Surl = "https://www.ndic.gov.ng/publications";
+const sourceURL = process.argv[2]; //"https://www.ndic.gov.ng/publications";
 
 // linkList sample:  "https://www.health.gov.ng/index.php?option=com_content&view=article&id=143&Itemid=512";
+
+function isValidUrl(url) {
+  if (new URL(url)) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 let connectionFailCount = 0;
 let linkList = [];
 let dlinkList = [];
 
-async function lunchBrowserPage(user) {
-  const browser = await puppeteer.launch({headless: false});
-  const page = await browser.newPage()
-
-  await page.setViewport({width: 1280, height:800});
-  await page.setUserAgent({
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36",
-  });
-
-  return page
-}
-
-const getWebsiteLinks = async (Surl) => {
+const getWebsiteLinks = async (sourceURL) => {
   try {
-    console.log(`Crawling all links from: ${Surl}`);
+    console.log(`Crawling all links from: ${sourceURL}`);
 
-    const response = await axios.get(Surl);
+    const response = await axios.get(sourceURL);
     const $ = cheerio.load(response.data);
 
     // const range = $("a")[1].attribs.href.length;
@@ -61,7 +50,7 @@ const getWebsiteLinks = async (Surl) => {
     if (connectionFailCount === 0) {
       connectionFailCount += 1;
 
-      getWebsiteLinks(Surl);
+      getWebsiteLinks(sourceURL);
 
       console.log(`Connection error. \n
       Reconnecting to server....`);
@@ -102,11 +91,13 @@ const downloadFiles = async (dlinkList) => {
 
   const appRoot = path.dirname(path.resolve(__dirname));
 
-  const folderName = `PDF/${Surl.split("/").pop()}`;
-  const subFolderName = Surl.split("/").pop();
+  const folderName = `PDF/${sourceURL.split("/").pop()}`;
+  const subFolderName = sourceURL.split("/").pop();
 
   try {
-    const isFolderExist = await checkFileExist(path.join(appRoot, folderName));
+    const isFolderExist = (
+      await fs.promises.stat(path.join(appRoot, folderName))
+    ).isDirectory();
     if (isFolderExist) {
       fs.mkdirSync(path.join(appRoot, "PDF"));
       fs.mkdirSync(path.join(`${appRoot}/PDF`, subFolderName));
@@ -116,7 +107,7 @@ const downloadFiles = async (dlinkList) => {
       if (!link.pathName) continue;
       let name = link.pathName;
       if (!isValidUrl(link.url)) continue;
-      let url = new URL(link.url)
+      let url = new URL(link.url);
 
       if (
         !url ||
@@ -162,7 +153,7 @@ const downloadFiles = async (dlinkList) => {
 };
 
 (async () => {
-  await getWebsiteLinks(Surl);
+  await getWebsiteLinks(sourceURL);
   await downloadLinks(linkList);
   await downloadFiles(dlinkList);
 })();

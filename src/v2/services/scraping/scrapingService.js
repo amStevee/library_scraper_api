@@ -1,33 +1,29 @@
-import { htmlParserService } from "./v2/infrastructure/htmlParser/htmlParserProvider.js";
-import { storageService } from "./v2/infrastructure/storage/storageProvider.js";
-import { isValidUrl, normalizeHostname } from "./v2/lib/utils.js";
-import { browserService } from "./v2/infrastructure/browser/browserProvider.js";
+import { htmlParserService } from "../../infrastructure/htmlParser/htmlParserProvider.js";
+import { storageService } from "../../infrastructure/storage/storageProvider.js";
+import { isValidUrl, normalizeHostname } from "../../lib/utils.js";
+import { browserService } from "../../infrastructure/browser/browserProvider.js";
 
-const url = "https://www.ndic.gov.ng/publications";
+// const url = "https://www.ndic.gov.ng/publications";
 // const url = "https://health.gov.ng/publications";
-async function scrapUrl(url) {
+
+async function scrapPage(url) {
   let page;
   try {
     const webUrl = new URL(url);
     const folderName = normalizeHostname(webUrl.hostname);
     const folderPath = await storageService.createFolder(folderName);
 
-    console.time("html");
     const browserInstance = await browserService.fetchHtml(webUrl, folderPath);
     page = browserInstance.page;
-    const { htmlContent } = browserInstance;
+    const { hrefs } = browserInstance;
 
-    const links =
-      htmlContent &&
-      Array(...(await htmlParserService.getAttrHrefs(htmlContent)));
+    if (!hrefs.length) return;
 
-    if (!links.length) return;
-
-    const pdfLinks = links.filter((link) => {
+    const fileLinks = hrefs.filter((link) => {
       return link.endsWith(".pdf" || ".docx");
     });
 
-    for (const link of pdfLinks) {
+    for (const link of fileLinks) {
       let fileUrl;
       if (!isValidUrl(link)) {
         if (!isValidUrl(`${webUrl.origin}${link}`)) continue;
@@ -46,14 +42,12 @@ async function scrapUrl(url) {
         if (!data) continue;
 
         console.log(
-          `Download ${fileUrl.pathname?.split("/").pop()} complete..`,
+          `Download ${fileUrl.pathname?.split("/").pop()} complete.`,
         );
       } catch (error) {
         console.error(error);
       }
     }
-
-    console.timeEnd("html");
   } catch (error) {
     if (error.code === "ERR_INVALID_URL") {
       console.log(`${url} is not a valid url.`, error);
@@ -63,7 +57,9 @@ async function scrapUrl(url) {
   } finally {
     if (page) {
       try {
+        console.log("Download completed.");
         await page.browser().close();
+        return "Download complete";
       } catch (error) {
         console.error("Failed to close browser:", error);
       }
@@ -71,4 +67,4 @@ async function scrapUrl(url) {
   }
 }
 
-scrapUrl(url);
+export { scrapPage };

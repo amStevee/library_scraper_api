@@ -1,10 +1,10 @@
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
-import axios from "axios";
 import puppeteer from "puppeteer-extra";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import { storageService } from "../../storage/storageProvider.js";
 import { apiService } from "../../api/apiProvider.js";
+import { normalizeFileName } from "../../../lib/utils.js";
 
 puppeteer.use(stealthPlugin());
 
@@ -17,7 +17,7 @@ export class PuppeteerProvider {
       console.log(`launching browser....`);
       const browser = await puppeteer.launch({
         headless: true,
-        executablePath: `C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe`,
+        // executablePath: `C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe`,
         args: [
           "--no-sandbox",
           "--disable-gpu",
@@ -53,11 +53,22 @@ export class PuppeteerProvider {
         };
       }
 
-      await browserInstance.page.goto(url, { waitUntil: "networkidle2" });
+      await browserInstance.page.goto(url, {
+        waitUntil: "networkidle0",
+        timeout: 30000,
+      });
 
-      const htmlContent = await browserInstance.page.content();
+      await browserInstance.page.waitForSelector('a[href^="/storage/');
 
-      return { htmlContent, ...browserInstance };
+      const hrefs = [
+        ...new Set(
+          await browserInstance.page.$$eval("a", (anchors) =>
+            anchors.map((a) => a.href),
+          ),
+        ),
+      ];
+
+      return { hrefs, ...browserInstance };
     } catch (error) {
       this.connectionFailCount += 1;
 
@@ -77,12 +88,7 @@ export class PuppeteerProvider {
     if (!downloadPath)
       throw new Error("Cannot download file: download path is missing");
 
-    const fileUrlObject = new URL(fileUrl);
-    const fileName = path
-      .basename(decodeURIComponent(fileUrlObject.pathname))
-      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
-      .replace(/[. ]+$/, "");
-    if (!fileName) throw new Error(`Cannot determine filename for ${fileUrl}`);
+    const fileName = normalizeFileName(fileUrl);
 
     const cookies = await page.browserContext().cookies(fileUrl);
     const headers = {
