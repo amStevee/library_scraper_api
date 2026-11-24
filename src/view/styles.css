@@ -582,18 +582,6 @@ h1 em {
   letter-spacing: 0.15em;
 }
 
-.spark {
-  position: absolute;
-  z-index: 2;
-  color: var(--gold);
-}
-
-.spark-one {
-  top: 12px;
-  right: 19px;
-  font-size: 24px;
-}
-
 .floating-note {
   position: absolute;
   right: 15px;
