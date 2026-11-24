@@ -6,7 +6,7 @@ import rateLimit from "express-rate-limit";
 import { fileURLToPath } from "node:url";
 import v2Routes from "./routes.js";
 const app = express();
-const viewDirectory = fileURLToPath(new URL("../../view/", import.meta.url));
+const viewDirectory = fileURLToPath(new URL("./view", import.meta.url));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
