@@ -16,7 +16,7 @@ let patienceMessageIndex = 0;
 
 const patienceMessages = [
   "Checking this page for PDFs, DOCX files, and public Drive links.",
-  "Gathering available files from this page—not crawling the whole site.",
+  "Gathering available files from this page (not crawling the whole site).",
   "Larger files can take a little longer. Keep this tab open for your ZIP.",
   "Your collection is being prepared as one ZIP download. Thanks for waiting.",
 ];
